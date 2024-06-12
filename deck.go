@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
+	"time"
 )
 
 // Create a new type of 'deck'
@@ -11,16 +13,30 @@ import (
 type deck []string
 
 func newDeck() deck {
-	cards := deck{}
-	cardSuits := []string{"Spades", "Hearts", "Diamonds", "Clubs"}
-	cardValues := []string{"Ace", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "King", "Queen"}
+	c := deck{}
+	cs := []string{"Spades", "Hearts", "Diamonds", "Clubs"}
+	cv := []string{"Ace", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "King", "Queen"}
 
-	for _, s := range cardSuits {
-		for _, v := range cardValues {
-			cards = append(cards, v+" of "+s)
+	for _, s := range cs {
+		for _, v := range cv {
+			c = append(c, v+" of "+s)
 		}
 	}
-	return cards
+	return c
+}
+
+func deal(d deck, handSize uint) (deck, deck) {
+	return d[0:handSize], d[handSize:]
+}
+
+func getDeckFromFile(filename string) deck {
+	bs, err := os.ReadFile(filename)
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	return deck(strings.Split(string(bs), ","))
 }
 
 // use a receiver (d deck) to add a function as a method
@@ -30,16 +46,21 @@ func (d deck) print() {
 	}
 }
 
-func deal(d deck, handSize uint) (deck, deck) {
-	return d[0:handSize], d[handSize:]
-}
-
 func (d deck) saveDeck(fileName string) error {
 	return os.WriteFile(fileName, []byte(d.toString()), 0666)
 }
 
 func (d deck) toString() string {
-	sDeck := []string(d)
+	sd := []string(d)
 
-	return strings.Join(sDeck, ",")
+	return strings.Join(sd, ",")
+}
+
+func (d deck) shuffle() {
+	source := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(source)
+	for i := range d {
+		randomIndex := r.Intn(len(d) - 1)
+		d[i], d[randomIndex] = d[randomIndex], d[i]
+	}
 }
